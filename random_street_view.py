@@ -1,3 +1,38 @@
+import pandas as pd
+import numpy as np
+import argparse
+import os
+import random
+import shapefile
+import sys
+import requests
+import time
+import json
+
+# Read CSV country file
+
+paises = pd.read_csv("UNSD Methodology.csv")
+
+paises = paises[paises['Region Name'].isin(['Europe', 'Oceania']) | 
+       paises['Country or Area'].isin(['South Africa','Botswana','Ghana','Senegal',
+                                       'Sri Lanka','Bangladesh','Japan', 'South Korea','Mexico']) |
+       paises['Intermediate Region Name'].isin(['South America']) | 
+       paises['Sub-region Name'].isin(['Northern America','South-eastern Asia'])]
+
+shape_file = "TM_WORLD_BORDERS-0.3.shp"
+if not os.path.exists(shape_file):
+    print("Cannot find " + shape_file + ". Please download it from "
+    "http://thematicmapping.org/downloads/world_borders.php "
+    "and try again.")
+    sys.exit()
+
+sf = shapefile.Reader(shape_file)
+
+records = pd.DataFrame([record for record in sf.records()])
+shapes = pd.DataFrame([record for record in sf.shapes()])
+shapes = shapes[records[2].isin(list(paises["ISO-alpha3 Code"]))]
+records = records[records[2].isin(list(paises["ISO-alpha3 Code"]))]
+
 # Determine if a point is inside a given polygon or not
 # Polygon is a list of (x,y) pairs.
 # http://www.ariel.com.au/a/python-point-int-poly.html
@@ -16,110 +51,110 @@ def point_inside_polygon(x, y, poly):
 						inside = not inside
 		p1x, p1y = p2x, p2y
 	return inside
-
-
-def get_street_view_images(images_wanted, country, heading, pitch):
-
-	import argparse
-	import os
-	import random
-	import shapefile  # pip install pyshp
-	import sys
-	import urllib
-	import getcolor
-
-	# Optional, http://stackoverflow.com/a/1557906/724176
-	try:
-	    import timing
-	    assert(timing)  # avoid flake8 warning
-	except:
-	    pass
-
+    
+def get_street_view_images_2(images_wanted, paises, formas):
 	# Google Street View Image API
 	# 25,000 image requests per 24 hours
 	# See https://developers.google.com/maps/documentation/streetview/
 	API_KEY = "AIzaSyC4tTaiv-T9hjjyt2nQ-eb8cm0fHeDt2os"
 	GOOGLE_URL = ("http://maps.googleapis.com/maps/api/streetview?sensor=false&"
-		      "size=640x640&key=" + API_KEY)
+			"size=640x640&key=" + API_KEY)
+	META_URL = ("https://maps.googleapis.com/maps/api/streetview/metadata?"
+			"key=" + API_KEY)
 
 	IMG_PREFIX = "img_"
 	IMG_SUFFIX = ".jpg"
 
-	print("Loading borders")
-	shape_file = "TM_WORLD_BORDERS-0.3.shp"
-	if not os.path.exists(shape_file):
-	    print("Cannot find " + shape_file + ". Please download it from "
-		  "http://thematicmapping.org/downloads/world_borders.php "
-		  "and try again.")
-	    sys.exit()
+	attempts, imagery_hits= 0, 0
 
-	sf = shapefile.Reader(shape_file)
-	shapes = sf.shapes()
+	if not os.path.exists("Images 2"):
+		os.makedirs("Images 2")
 
-	print("Finding country")
-	for i, record in enumerate(sf.records()):
-		if record[2] == country.upper():
-			print(record[2], record[4])
-			print(shapes[i].bbox)
-			min_lon = shapes[i].bbox[0]
-			min_lat = shapes[i].bbox[1]
-			max_lon = shapes[i].bbox[2]
-			max_lat = shapes[i].bbox[3]
-			borders = shapes[i].points
-			break
+	images = os.listdir("Images 2")
+	images = [i.replace(IMG_PREFIX,'').replace(IMG_SUFFIX,'') for i in images]
 
-	print("Getting images")
-	attempts, country_hits, imagery_hits, imagery_misses = 0, 0, 0, 0
-	MAX_URLS = 25000
+	coord_set = set(images)
+	local_hit = 0
+	local_start_time = 0
 
-	if not os.path.exists(country):
-		os.makedirs(country)
-
+	start_time = time.time()
 	try:
-		while(True):
+		elapsed_time = 0
+		while(1):
+			elapsed_time = time.time() - start_time 
 			attempts += 1
-			rand_lat = random.uniform(min_lat, max_lat)
-			rand_lon = random.uniform(min_lon, max_lon)
-			# print attempts, rand_lat, rand_lon
+			if (local_hit == 0):
+				i = int(np.random.choice(range(0,len(paises)),1))
+				#print(i)
+				record = paises.iloc[i]
+				heading = str(random.random()*360)
+				#print("Finding country")
+				#print(record[2], record[4])
+				#print(shapes.iloc[i][0].bbox)
+				min_lon = formas.iloc[i][0].bbox[0]
+				min_lat = formas.iloc[i][0].bbox[1]
+				max_lon = formas.iloc[i][0].bbox[2]
+				max_lat = formas.iloc[i][0].bbox[3]
+				borders = formas.iloc[i][0].points
+				rand_lat = round(random.uniform(min_lat, max_lat),2)
+				rand_lon = round(random.uniform(min_lon, max_lon),2)
+				#print(attempts, rand_lat, rand_lon)
+			else:
+				if (time.time() - local_start_time >= 10):
+					local_hit = 0
+					attempts -= 1
+					continue
+				rand_lat = round(random.uniform(rand_lat - rand_lat/60, rand_lat + rand_lat/60),2)
+				rand_lon = round(random.uniform(rand_lon - rand_lon/60, rand_lon + rand_lon/60),2)
+			lat_lon = str(rand_lat) + "," + str(rand_lon)
+			if lat_lon in coord_set:
+				continue
 			# Is (lat,lon) inside borders?
 			if point_inside_polygon(rand_lon, rand_lat, borders):
-				print("  In country")
-				country_hits += 1
-				lat_lon = str(rand_lat) + "," + str(rand_lon)
-				outfile = os.path.join(country, IMG_PREFIX + lat_lon + IMG_SUFFIX)
+				#print("  In country")
+				#country_hits += 1
+				#print(lat_lon)
+				outfile = os.path.join("Images 2", IMG_PREFIX + lat_lon + IMG_SUFFIX)
+				meta_url = META_URL + "&location=" + lat_lon
+				print(meta_url)
 				url = GOOGLE_URL + "&location=" + lat_lon
-				if heading:
-					url += "&heading=" + heading
-				if pitch:
-					url += "&pitch=" + pitch
+				url += "&heading=" + heading
 				try:
-					urllib.urlretrieve(url, outfile)
+					#r = requests.get(url, stream=True)
+					#with open(outfile, 'wb') as f:
+					#	for chunk in r:
+					#		f.write(chunk)
+					r = requests.get(meta_url, stream=True)
+					metadata = json.loads(r.text)
+					print(metadata["status"])
 				except KeyboardInterrupt:
-					sys.exit("exit")
+					elapsed_time = time.time() - start_time
+					#print("Keyboard interrupt")
 				except:
 					pass
-				if os.path.isfile(outfile):
-					print(lat_lon)
-					# get_color returns the main color of image
-					color = getcolor.get_color(outfile)
-					print(color)
-					if color[0] == '#e3e2dd' or color[0] == "#e3e2de":
-						print("    No imagery")
-						imagery_misses += 1
-						os.remove(outfile)
-					else:
-						print("    ========== Got one! ==========")
-						imagery_hits += 1
-						if imagery_hits == images_wanted:
-							break
-				if country_hits == MAX_URLS:
-					break
+				# if os.path.isfile(outfile):
+					#print(lat_lon)
+					# if os.path.getsize(outfile) < 9000:
+						#print("    No imagery")
+						#imagery_misses += 1
+						# os.remove(outfile)
+					# else:
+						#print("    ========== Got one! ==========")
+						# coord_set.add(lat_lon)
+						# imagery_hits += 1
+						# local_hit = 1
+						# local_start_time = time.time()
+						# if imagery_hits == images_wanted:
+							# elapsed_time = time.time() - start_time
+							# break
 	except KeyboardInterrupt:
-		print("Keyboard interrupt")
+		elapsed_time = time.time() - start_time
+		#print("Keyboard interrupt")
 
-	print("Attempts:\t", attempts)
-	print("Country hits:\t", country_hits)
-	print("Imagery misses:\t", imagery_misses)
-	print("Imagery hits:\t", imagery_hits)
+	print("Elapsed time:\t", elapsed_time)
+	print("Number of hits:\t", imagery_hits)
+	print("Imagery hit rate per second:\t", imagery_hits/elapsed_time)
 
-	# End of file
+	return imagery_hits
+
+get_street_view_images_2(1000, records, shapes) 
