@@ -88,6 +88,7 @@ def get_street_view_images(images_wanted, country, heading, pitch):
 				lat_lon = str(rand_lat) + "," + str(rand_lon)
 				outfile = os.path.join(country, IMG_PREFIX + lat_lon + IMG_SUFFIX)
 				url = GOOGLE_URL + "&location=" + lat_lon
+				print(url)
 				if heading:
 					url += "&heading=" + heading
 				if pitch:

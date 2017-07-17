@@ -1,0 +1,169 @@
+Cenário 1 - Baixando imagens aleatórias do Street View
+
+Elapsed time:	 600.516597032547
+Number of hits:	 5
+Imagery hit rate per second:	 0.008326164546837676
+
+Elapsed time:	 600.0088496208191
+Number of hits:	 4
+Imagery hit rate per second:	 0.006666568338996725
+
+Elapsed time:	 600.2435252666473
+Number of hits:	 3
+Imagery hit rate per second:	 0.004997971446118147
+
+
+Cenário 2 - Baixando imagens aleatórias do Street View
+
+
+Elapsed time:	 600.6420464515686
+Number of hits:	 1
+Imagery hit rate per second:	 0.001664885110704005
+
+Elapsed time:	 600.6385786533356
+Number of hits:	 19
+Imagery hit rate per second:	 0.03163299973604598
+
+Elapsed time:	 600.5735182762146
+Number of hits:	 24
+Imagery hit rate per second:	 0.03996180196037543
+
+Cenário 3 - Dois cores
+
+Elapsed time:	 600.5783667564392
+Number of hits:	 76
+Imagery hit rate per second:	 0.12654468460203683
+Elapsed time:	 601.9021871089935
+Number of hits:	 1
+Imagery hit rate per second:	 0.0016613995121086314
+
+###########################################################
+
+MAS... (desconsiderando áreas dos países)
+
+1
+
+Elapsed time:	 600.0362324714661
+Number of hits:	 71
+Imagery hit rate per second:	 0.11832618791628773
+
+Elapsed time:	 600.2270863056183
+Number of hits:	 77
+Imagery hit rate per second:	 0.12828478047189265
+
+Elapsed time:	 600.0033967494965
+Number of hits:	 74
+Imagery hit rate per second:	 0.12333263511655629
+
+Elapsed time:	 600.3094801902771
+Number of hits:	 79
+Imagery hit rate per second:	 0.13159878797009797
+
+2
+Elapsed time:	 600.000002861023
+Number of hits:	 17
+Imagery hit rate per second:	 0.028333333198229473
+
+2 - Reduzido para 10s
+
+Elapsed time:	 600.000011920929
+Number of hits:	 78
+Imagery hit rate per second:	 0.1299999974171321
+
+Elapsed time:	 600.0000813007355
+Number of hits:	 155
+Imagery hit rate per second:	 0.25833329832885477
+
+Elapsed time:	 600.3081605434418
+Number of hits:	 126
+Imagery hit rate per second:	 0.209892199176396
+
+1 - Três cores
+
+Elapsed time:	 600.1814706325531
+Number of hits:	 3
+Imagery hit rate per second:	 0.004998488201973631
+Elapsed time:	 600.9666950702667
+Number of hits:	 15
+Imagery hit rate per second:	 0.024959785830138487
+Elapsed time:	 602.2123701572418
+Number of hits:	 76
+Imagery hit rate per second:	 0.1262013265854301
+Elapsed time:	 602.3332476615906
+Number of hits:	 94
+Elapsed time:	 0.156146179
+
+2 - Dois cores
+
+Elapsed time:	 600.0000004768372
+Elapsed time:	 600.0000567436218
+Number of hits:	 16
+Imagery hit rate per second:	 0.026666664144728156
+Number of hits:	 3
+Imagery hit rate per second:	 0.004999999996026357
+Elapsed time:	 600.0000085830688
+Number of hits:	 13
+Imagery hit rate per second:	 0.021666666356722517
+
+Imagery hit rate per second:	 0.053333333333333333
+
+2 - Três cores - Reduzidos para 10s
+
+Elapsed time:	 600.0458867549896
+Number of hits:	 2
+Imagery hit rate per second:	 0.0033330784264114766
+Elapsed time:	 600.0697121620178
+Number of hits:	 18
+Imagery hit rate per second:	 0.029996514796834187
+Elapsed time:	 600.3461790084839
+Number of hits:	 100
+Imagery hit rate per second:	 0.16657056128042222
+Elapsed time:	 600.8408207893372
+Number of hits:	 120
+Imagery hit rate per second:	 0.19972011862035854
+
+Elapsed time:	 600.2078132629395
+Number of hits:	 5
+Imagery hit rate per second:	 0.008330448037352684
+Elapsed time:	 603.3568539619446
+Number of hits:	 1
+Imagery hit rate per second:	 0.00165739395091561
+Elapsed time:	 604.9284026622772
+Number of hits:	 9
+Imagery hit rate per second:	 0.014877793736235873
+Elapsed time:	 605.0458631515503
+Number of hits:	 15
+Imagery hit rate per second:	 0.024791509063244087
+
+Elapsed time:	 600.6110253334045
+Number of hits:	 1
+Imagery hit rate per second:	 0.0016649711007967114
+Elapsed time:	 603.4194204807281
+Number of hits:	 9
+Imagery hit rate per second:	 0.014914998912083307
+Elapsed time:	 604.815388917923
+Number of hits:	 2
+Imagery hit rate per second:	 0.0033067941666930895
+Elapsed time:	 611.2757203578949
+Number of hits:	 12
+Imagery hit rate per second:	 0.019631075798289745
+(Lentidão na rede? Não! Azar? I/O? ... Um núcleo trabalha bem mais! Má distribuição?)
+
+-> 2 - três núcleos e sem separação de regiões
+
+Elapsed time:	 600.0000011920929
+Number of hits:	 73
+Imagery hit rate per second:	 0.12166666642493672
+Elapsed time:	 600.2698187828064
+Number of hits:	 64
+Imagery hit rate per second:	 0.10661872044437554
+Elapsed time:	 602.8710238933563
+Number of hits:	 104
+Imagery hit rate per second:	 0.17250787627570052
+Elapsed time:	 603.2769203186035
+Number of hits:	 241
+Imagery hit rate per second:	 0.3994848665397687
+
+
+-> 7 horas para baixar 10 mil imagens no melhor dos casos! 1/3 tempo do pior caso (aproximadamente 23 horas)
+​
