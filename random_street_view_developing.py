@@ -29,9 +29,12 @@ if not os.path.exists(shape_file):
 sf = shapefile.Reader(shape_file)
 
 records = pd.DataFrame([record for record in sf.records()])
+records.columns = ['0a','1','ISO-alpha3 Code','3','4','5','6','7','8','9','10']
 shapes = pd.DataFrame([record for record in sf.shapes()])
-shapes = shapes[records[2].isin(list(paises["ISO-alpha3 Code"]))]
-records = records[records[2].isin(list(paises["ISO-alpha3 Code"]))]
+
+records = pd.concat([records, shapes], axis = 1)
+records = pd.merge(records, paises[[10,14]], on=['ISO-alpha3 Code'])
+
 
 # Determine if a point is inside a given polygon or not
 # Polygon is a list of (x,y) pairs.
@@ -52,13 +55,13 @@ def point_inside_polygon(x, y, poly):
 		p1x, p1y = p2x, p2y
 	return inside
     
-def get_street_view_images_2(images_wanted, paises, formas):
+def get_street_view_images(images_wanted, development, paises):
 	# Google Street View Image API
 	# 25,000 image requests per 24 hours
 	# See https://developers.google.com/maps/documentation/streetview/
 	API_KEY = "AIzaSyC4tTaiv-T9hjjyt2nQ-eb8cm0fHeDt2os"
 	GOOGLE_URL = ("http://maps.googleapis.com/maps/api/streetview?sensor=false&"
-			"size=640x640&key=" + API_KEY)
+			"size=227x227&fov=120&key=" + API_KEY)
 	META_URL = ("https://maps.googleapis.com/maps/api/streetview/metadata?"
 			"key=" + API_KEY)
 
@@ -67,89 +70,60 @@ def get_street_view_images_2(images_wanted, paises, formas):
 
 	attempts, imagery_hits= 0, 0
 
-	if not os.path.exists("Images 2"):
-		os.makedirs("Images 2")
+	if not os.path.exists(development):
+		os.makedirs(development)
 
-	images = os.listdir("Images 2")
+	images = os.listdir(development)
 	images = [i.replace(IMG_PREFIX,'').replace(IMG_SUFFIX,'') for i in images]
-
+    
 	coord_set = set(images)
-	local_hit = 0
-	local_start_time = 0
-
+	paises = paises[paises['Developed / Developing Countries'] == development]
+    
 	start_time = time.time()
 	try:
 		elapsed_time = 0
 		while(1):
 			elapsed_time = time.time() - start_time 
 			attempts += 1
-			if (local_hit == 0):
-				i = int(np.random.choice(range(0,len(paises)),1))
-				#print(i)
-				record = paises.iloc[i]
-				heading = str(random.random()*360)
-				#print("Finding country")
-				#print(record[2], record[4])
-				#print(shapes.iloc[i][0].bbox)
-				min_lon = formas.iloc[i][0].bbox[0]
-				min_lat = formas.iloc[i][0].bbox[1]
-				max_lon = formas.iloc[i][0].bbox[2]
-				max_lat = formas.iloc[i][0].bbox[3]
-				borders = formas.iloc[i][0].points
-				rand_lat = round(random.uniform(min_lat, max_lat),2)
-				rand_lon = round(random.uniform(min_lon, max_lon),2)
-				#print(attempts, rand_lat, rand_lon)
-			else:
-				if (time.time() - local_start_time >= 10):
-					local_hit = 0
-					attempts -= 1
-					continue
-				rand_lat = round(random.uniform(rand_lat - rand_lat/60, rand_lat + rand_lat/60),2)
-				rand_lon = round(random.uniform(rand_lon - rand_lon/60, rand_lon + rand_lon/60),2)
+			i = int(np.random.choice(range(0,len(paises)),1))
+			#print(paises.iloc[i][4])
+			min_lon = paises.iloc[i][0].bbox[0]
+			min_lat = paises.iloc[i][0].bbox[1]
+			max_lon = paises.iloc[i][0].bbox[2]
+			max_lat = paises.iloc[i][0].bbox[3]
+			borders = paises.iloc[i][0].points
+			rand_lat = round(random.uniform(min_lat, max_lat),2)
+			rand_lon = round(random.uniform(min_lon, max_lon),2)
 			lat_lon = str(rand_lat) + "," + str(rand_lon)
 			if lat_lon in coord_set:
 				continue
 			# Is (lat,lon) inside borders?
 			if point_inside_polygon(rand_lon, rand_lat, borders):
-				#print("  In country")
-				#country_hits += 1
-				#print(lat_lon)
-				outfile = os.path.join("Images 2", IMG_PREFIX + lat_lon + IMG_SUFFIX)
 				meta_url = META_URL + "&location=" + lat_lon
-				print(meta_url)
-				url = GOOGLE_URL + "&location=" + lat_lon
-				url += "&heading=" + heading
 				try:
-					#r = requests.get(url, stream=True)
-					#with open(outfile, 'wb') as f:
-					#	for chunk in r:
-					#		f.write(chunk)
 					r = requests.get(meta_url, stream=True)
 					metadata = json.loads(r.text)
-					print(metadata["status"])
 				except KeyboardInterrupt:
 					elapsed_time = time.time() - start_time
-					#print("Keyboard interrupt")
 				except:
 					pass
-				# if os.path.isfile(outfile):
-					#print(lat_lon)
-					# if os.path.getsize(outfile) < 9000:
-						#print("    No imagery")
-						#imagery_misses += 1
-						# os.remove(outfile)
-					# else:
-						#print("    ========== Got one! ==========")
-						# coord_set.add(lat_lon)
-						# imagery_hits += 1
-						# local_hit = 1
-						# local_start_time = time.time()
-						# if imagery_hits == images_wanted:
-							# elapsed_time = time.time() - start_time
-							# break
+				if metadata["status"] == "OK":
+					#print("    ========== Got one! ==========")
+					heading = str(random.random()*360)
+					outfile = os.path.join(development, IMG_PREFIX + lat_lon + IMG_SUFFIX)
+					url = GOOGLE_URL + "&location=" + lat_lon
+					url += "&heading=" + heading
+					r = requests.get(url, stream=True)
+					with open(outfile, 'wb') as f:
+						for chunk in r:
+							f.write(chunk)
+					coord_set.add(lat_lon)
+					imagery_hits += 1
+					if imagery_hits == images_wanted:
+						elapsed_time = time.time() - start_time
+						break
 	except KeyboardInterrupt:
 		elapsed_time = time.time() - start_time
-		#print("Keyboard interrupt")
 
 	print("Elapsed time:\t", elapsed_time)
 	print("Number of hits:\t", imagery_hits)
@@ -157,4 +131,4 @@ def get_street_view_images_2(images_wanted, paises, formas):
 
 	return imagery_hits
 
-get_street_view_images_2(1000, records, shapes) 
+get_street_view_images(5000, 'Developing', records) 
