@@ -133,11 +133,8 @@ def get_street_view_images(images_wanted, development, paises):
 	return imagery_hits
 
 start_time = time.time()
-pool = Pool(processes=6)
+pool = Pool(processes=3)
 imagery_hits = pool.starmap(get_street_view_images, [(1000,'Developing', records),
-                                                       (1000,'Developing', records),
-                                                       (1000,'Developing', records),
-							(1000,'Developing', records),
                                                        (1000,'Developing', records),
                                                        (1000,'Developing', records)])
 elapsed_time = time.time() - start_time
